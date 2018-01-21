@@ -29,6 +29,11 @@ class IdController @Inject()(repo: PersonRepository,
     Ok(views.html.bodyIndex(bodyForm))
   }
 
+  val dashboard = Action { implicit request =>
+    val candles:List[Zaif.B] = Utils4Controller.getCandles
+    Ok(views.html.dashboard(candles))
+  }
+
   def input = Action {implicit request =>
     Ok(views.html.bodyIndex(bodyForm))
   }

@@ -5,6 +5,7 @@
 # Home page
 GET     /                           controllers.IdController.index
 POST    /                           controllers.IdController.result
+GET     /dashboard                  controllers.IdController.dashboard
 
 GET     /                           controllers.PersonController.index
 POST    /person                     controllers.PersonController.addPerson
