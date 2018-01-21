@@ -1,0 +1,14 @@
+@import helper._
+@(userForm:Form[UserData])(implicit messages: Messages,request: Request[_])
+@main("掲示板へようこそ") {
+  @form(routes.IdController.result()) {
+		@inputText(userForm("name"))
+        @inputText(userForm("body"))
+		@CSRF.formField
+
+		<div class="buttons">
+			<input type="submit" value="送信"/>
+		</div>
+
+	}
+}
