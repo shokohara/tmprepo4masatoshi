@@ -31,20 +31,20 @@ class IdController @Inject()(repo: PersonRepository,
 
   val dashboard = Action { implicit request =>
     val candles: List[Zaif.B] = Utils4Controller.getCandles
-    val result: String = doit(candles(0).close, candles(1).close).toString()
+    val result = (for(i <- 0 to 7) yield doit(candles(i).close, candles(i+1).close,candles(i+2).close)).toString()
     Ok(views.html.dashboard(result))
         //Ok(views.html.dashboard(candles.toString))
   }
 
   // false = sell
   // true = buy
-  def doit(previous: Double, current: Double): (Boolean, Double) =(true,current)
-    /*{if(previous < (previous + 1)){
-     // 現在の価格が５分前の価格より１円高かった場合、buy実行
-    }else{
-      //現在の価格が５分前の価格より１円低かった場合、sell実行
+  def doit(A1: Double, A2: Double,A3: Double): Option[(Boolean,Double)] = {
+    if(A2 - A1 < A3 - A2){
+      Some(true,A3)
+    }else if(A2 - A1 > A3 - A2){
+      Some(false,A3)
+    }else None
     }
-    }*/
 
   def input = Action { implicit request =>
     Ok(views.html.bodyIndex(bodyForm))
