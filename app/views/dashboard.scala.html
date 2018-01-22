@@ -1,7 +1,5 @@
 @import helper._
-@(candles:List[controllers.Zaif.B])(implicit messages: Messages,request: Request[_])
+@(body: String)(implicit messages: Messages,request: Request[_])
 @main("Dashboard") {
-@for(c <- candles) {
-<div>@c</div>
-}
+<div>@body</div>
 }
