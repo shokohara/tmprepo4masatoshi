@@ -31,7 +31,8 @@ class IdController @Inject()(repo: PersonRepository,
 
   val dashboard = Action { implicit request =>
     val candles: List[Zaif.B] = Utils4Controller.getCandles
-    val result = (for{i <- 0 to 7} yield doit(candles(i).close, candles(i+1).close,candles(i+2).close)).toString()
+    val result = (for{i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i+1).close,candles(i+2).close)).mkString("", "\n", "")
+    println(result)
       Ok(views.html.dashboard(result))
         //Ok(views.html.dashboard(candles.toString))
   }
