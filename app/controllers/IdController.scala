@@ -31,17 +31,17 @@ class IdController @Inject()(repo: PersonRepository,
 
   val dashboard = Action { implicit request =>
     val candles: List[Zaif.B] = Utils4Controller.getCandles
-    val result = (for(i <- 0 to 7) yield doit(candles(i).close, candles(i+1).close,candles(i+2).close)).toString()
-    Ok(views.html.dashboard(result))
+    val result = (for{i <- 0 to 7} yield doit(candles(i).close, candles(i+1).close,candles(i+2).close)).toString()
+      Ok(views.html.dashboard(result))
         //Ok(views.html.dashboard(candles.toString))
   }
 
   // false = sell
   // true = buy
-  def doit(A1: Double, A2: Double,A3: Double): Option[(Boolean,Double)] = {
-    if(A2 - A1 < A3 - A2){
+  def doit(A1: Double, A2: Double, A3: Double): Option[(Boolean,Double)] = {
+    if(A2 - A1 <= 0 && A3 - A2 > 0){
       Some(true,A3)
-    }else if(A2 - A1 > A3 - A2){
+    }else if(A2 - A1 <= 0 && A3 - A2<= 0){
       Some(false,A3)
     }else None
     }
