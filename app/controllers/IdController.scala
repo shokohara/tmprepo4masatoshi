@@ -31,10 +31,11 @@ class IdController @Inject()(repo: PersonRepository,
 
   val dashboard = Action { implicit request =>
     val candles: List[Zaif.B] = Utils4Controller.getCandles
-    val deterMineResults = (for {i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i + 1).close, candles(i + 2).close)).mkString("", "\n", "")
+    val deterMineResults = for {i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i + 1).close, candles(i + 2).close)
     println(deterMineResults)
-    val calculateResults = calculate(deterMineResults(), deterMineResults()).mkString("", "\n", "")
-    Ok(views.html.dashboard(calculateResults))
+    val betterDeterMineResults:[(Boolean, Double)] = deterMineResults.flatMap(_.toList)
+    val calculateResults = calculate(betterDeterMineResults(0)_1, betterDeterMineResults(0)._2).mkString("", "\n", "")
+    Ok(views.html.dashboard(calculateResults.toString))
     //Ok(views.html.dashboard(deterMineResults))
     //Ok(views.html.dashboard(candles.toString))
   }
