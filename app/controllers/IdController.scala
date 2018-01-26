@@ -31,21 +31,33 @@ class IdController @Inject()(repo: PersonRepository,
 
   val dashboard = Action { implicit request =>
     val candles: List[Zaif.B] = Utils4Controller.getCandles
-    val result = (for{i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i+1).close,candles(i+2).close)).mkString("", "\n", "")
+    val result = (for {i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i + 1).close, candles(i + 2).close)).mkString("", "\n", "")
     println(result)
-      Ok(views.html.dashboard(result))
-        //Ok(views.html.dashboard(candles.toString))
+    Ok(views.html.dashboard(result))
+    //Ok(views.html.dashboard(candles.toString))
   }
 
   // false = sell
   // true = buy
-  def doit(A1: Double, A2: Double, A3: Double): Option[(Boolean,Double)] = {
-    if(A2 - A1 <= 0 && A3 - A2 > 0){
-      Some(true,A3)
-    }else if(A2 - A1 <= 0 && A3 - A2<= 0){
-      Some(false,A3)
+  def doit(A1: Double, A2: Double, A3: Double): Option[(Boolean, Double)] = {
+    if (A2 - A1 <= 0 && A3 - A2 > 0) {
+      Some(true, A3)
+    } else if (A2 - A1 <= 0 && A3 - A2 <= 0) {
+      Some(false, A3)
+    } else None
+  }
+
+  var asset = 10000.0
+  def result(Aa: Boolean, Ab: Double): Option[(Boolean, Double)] = {
+    if (Aa == true && asset < 0) {
+      asset = asset - asset * (asset / Ab)
+      Some(true, asset)
+    } else if (Aa == false) {
+      asset = (asset + asset)
+      Some(true, asset)
     }else None
-    }
+  }
+
 
   def input = Action { implicit request =>
     Ok(views.html.bodyIndex(bodyForm))
