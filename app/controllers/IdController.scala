@@ -31,9 +31,11 @@ class IdController @Inject()(repo: PersonRepository,
 
   val dashboard = Action { implicit request =>
     val candles: List[Zaif.B] = Utils4Controller.getCandles
-    val result = (for {i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i + 1).close, candles(i + 2).close)).mkString("", "\n", "")
-    println(result)
-    Ok(views.html.dashboard(result))
+    val deterMineResults = (for {i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i + 1).close, candles(i + 2).close)).mkString("", "\n", "")
+    println(deterMineResults)
+    val calculateResults = calculate(deterMineResults(), deterMineResults()).mkString("", "\n", "")
+    Ok(views.html.dashboard(calculateResults))
+    //Ok(views.html.dashboard(deterMineResults))
     //Ok(views.html.dashboard(candles.toString))
   }
 
@@ -47,14 +49,11 @@ class IdController @Inject()(repo: PersonRepository,
     } else None
   }
 
-  var asset = 10000.0
-  def result(Aa: Boolean, Ab: Double): Option[(Boolean, Double)] = {
-    if (Aa == true && asset < 0) {
-      asset = asset - asset * (asset / Ab)
-      Some(true, asset)
-    } else if (Aa == false) {
-      asset = (asset + asset)
-      Some(true, asset)
+  def calculate(Aa: Boolean, Ab: Double): Option[(Boolean, Double)] = {
+    if (true) {
+      Some(true, Ab)
+    } else if (false) {
+      Some(false, Ab)
     }else None
   }
 
