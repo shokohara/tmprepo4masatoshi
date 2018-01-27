@@ -33,12 +33,14 @@ class IdController @Inject()(repo: PersonRepository,
     val candles: List[Zaif.B] = Utils4Controller.getCandles
     val deterMineResults = for {i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i + 1).close, candles(i + 2).close)
     println(deterMineResults)
-    val betterDeterMineResults:[(Boolean, Double)] = deterMineResults.flatMap(_.toList)
-    val calculateResults = calculate(betterDeterMineResults(0)_1, betterDeterMineResults(0)._2).mkString("", "\n", "")
+    val betterDeterMineResults = deterMineResults.flatMap(_.toList)
+    val calculateResults = for {i <- 0 until betterDeterMineResults.length} yield calculate(
+      betterDeterMineResults(i)._1, betterDeterMineResults(i)._2).mkString("", "\n", "")
     Ok(views.html.dashboard(calculateResults.toString))
     //Ok(views.html.dashboard(deterMineResults))
     //Ok(views.html.dashboard(candles.toString))
   }
+   //37行目のループ、def calcuの計算式を組み立てる
 
   // false = sell
   // true = buy
