@@ -34,13 +34,22 @@ class IdController @Inject()(repo: PersonRepository,
     val deterMineResults = for {i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i + 1).close, candles(i + 2).close)
     println(deterMineResults)
     val betterDeterMineResults = deterMineResults.flatMap(_.toList)
-    val calculateResults = for {i <- 0 until betterDeterMineResults.length} yield calculate(
-      betterDeterMineResults(i)._1, betterDeterMineResults(i)._2).mkString("", "\n", "")
+    val calculateResults = for {i <- 0 until betterDeterMineResults.length} yield function(
+      betterDeterMineResults(i)._1, betterDeterMineResults(i)._2)
+    val temp = calculateResults.sum
+
+    //varの場合
+    //var temp:Double = 0
+    //for (i <- (0 until calculateResults.length)) temp = calculateResults(i) + temp
+
+    println(temp)
     Ok(views.html.dashboard(calculateResults.toString))
+
     //Ok(views.html.dashboard(deterMineResults))
     //Ok(views.html.dashboard(candles.toString))
   }
-   //37行目のループ、def calcuの計算式を組み立てる
+  //.mkString("", "\n", "")
+   //def calcuの計算式を組み立てる
 
   // false = sell
   // true = buy
@@ -52,12 +61,12 @@ class IdController @Inject()(repo: PersonRepository,
     } else None
   }
 
-  def calculate(Aa: Boolean, Ab: Double): Option[(Boolean, Double)] = {
-    if (true) {
-      Some(true, Ab)
-    } else if (false) {
-      Some(false, Ab)
-    }else None
+  def function(List:(Boolean, Double)): Double= {
+    if (List._1 == false) {
+      List._2
+    } else {
+      List._2 * -1.001
+    }
   }
 
 
