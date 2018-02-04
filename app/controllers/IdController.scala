@@ -32,7 +32,6 @@ class IdController @Inject()(repo: PersonRepository,
   val dashboard = Action { implicit request =>
     val candles: List[Zaif.B] = Utils4Controller.getCandles
     val deterMineResults = for {i <- 0 to candles.length - 3} yield doit(candles(i).close, candles(i + 1).close, candles(i + 2).close)
-    println(deterMineResults)
     val betterDeterMineResults = deterMineResults.flatMap(_.toList)
     val calculateResults = for {i <- 0 until betterDeterMineResults.length} yield function(
       betterDeterMineResults(i)._1, betterDeterMineResults(i)._2)
@@ -44,12 +43,20 @@ class IdController @Inject()(repo: PersonRepository,
 
     println(temp)
     Ok(views.html.dashboard(calculateResults.toString))
-
+    //.mkString("", "\n", "")
     //Ok(views.html.dashboard(deterMineResults))
     //Ok(views.html.dashboard(candles.toString))
   }
-  //.mkString("", "\n", "")
-   //def calcuの計算式を組み立てる
+
+  val virtualCurrency = Action {implicit request =>
+    val candles: List[Zaif.B] = Utils4Controller.getCandles
+    val averageLineA = averageCal(candles(0).close,candles(0).time)
+    Ok(views.html.virtualCurrency(averageLineA))
+  }
+
+
+   //
+   //taple option,double option double
 
   // false = sell
   // true = buy
@@ -63,11 +70,23 @@ class IdController @Inject()(repo: PersonRepository,
 
   def function(List:(Boolean, Double)): Double= {
     if (List._1 == false) {
-      List._2
+        List._2
     } else {
       List._2 * -1.001
     }
   }
+
+  def averageCal(values: List[Double], period: Long): List[Double] = {
+    (for (i <- 1 to values.length)
+      yield
+        if (i < period) 0.00
+        else {values.slice(i - period, i).reduceLeft(_ + _) / period
+        }).toList
+  }
+
+  /*def averageCal(A1: Double, A2: Double, A3: Double):Option[(Boolean, Double)] = {
+    if
+  }*/
 
 
   def input = Action { implicit request =>

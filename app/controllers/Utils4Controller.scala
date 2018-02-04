@@ -3,6 +3,9 @@ package controllers
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZoneId}
 
+import java.nio.file.{Paths, Files}
+import java.nio.charset.StandardCharsets
+
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.parser._
@@ -18,9 +21,11 @@ object Utils4Controller extends LazyLogging {
     require(zoneId.toString == "Asia/Tokyo")
     val from: Long = localDate.atStartOfDay(zoneId).toEpochSecond
     val to: Long = LocalDate.now(zoneId).atStartOfDay(zoneId).toEpochSecond
-    val x: String = (s"curl https://zaif.jp/zaif_chart_api/v1/history?symbol=XEM_JPY&resolution=5&from=$from&to=$to" !!).replace("""\""", "").trim.drop(1).dropRight(1)
+    val x: String = (s"curl https://zaif.jp/zaif_chart_api/v1/history?symbol=XEM_JPY&resolution=30&from=$from&to=$to" !!).replace("""\""", "").trim.drop(1).dropRight(1)
     parse(x).fold(throw _, identity).as[Zaif.A].fold(throw _, identity).ohlc_data
   }
+
+  Files.write(Paths.get("output.csv"), Zaif.A(getCandles).toCsv.getBytes(StandardCharsets.UTF_8))
 }
 
 object Zaif {
