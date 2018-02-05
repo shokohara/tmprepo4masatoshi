@@ -54,9 +54,10 @@ class IdController @Inject()(repo: PersonRepository,
     val averageLine6 = {averageCalB(Utils4Controller.getCandles.map(_.close), 6)}
     //List - Listの計算
     val averageDiff = (0 until averageLine26.size).map(i => averageLine26(i) - averageLine6(i))
-    val myAssets = List(1000000 ,100)
-    val firstAssets = myAssets(0) + myAssets(1) * candles(0).close
-    Ok(views.html.virtualCurrency(firstAssets.toString))
+    val myAssets1 = List(1000000 ,100)
+    val firstAssets = myAssets1(0) + myAssets1(1) * candles(0).close
+    val myAssetsResults = myAssetsCal(averageDiff(0),averageDiff(1),candles(1).close)
+    Ok(views.html.virtualCurrency(myAssetsResults.toString))
   }
 
 
@@ -97,6 +98,23 @@ class IdController @Inject()(repo: PersonRepository,
         }).toList
   }
 
+  def myAssetsCal(A1: Double, A2: Double ,A3: Double):Double = {
+    var myAssets2 = List(1000000 ,100)
+    val ratio = 0.99
+    var counts = 0
+    if(0 > A1 && A2 > 0 && myAssets2(0) != 0){
+      myAssets2(1) = myAssets2(1) + myAssets2(0)/A3 * ratio
+      //Buy
+      myAssets2(0) = 0
+      counts = counts + 1
+    }else(0 < A1 && 0 < A2 && myAssets2(1) != 0){
+      myAssets2(0) = myAssets2(0) + myAssets2(1) * A3
+      //Sell
+      myAssets2(1) = 0
+      counts = counts + 1
+    }
+
+  }
   /*def averageCal(A1: Double, A2: Double, A3: Double):Option[(Boolean, Double)] = {
     if
   }*/
