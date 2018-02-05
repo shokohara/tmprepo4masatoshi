@@ -55,10 +55,9 @@ class IdController @Inject()(repo: PersonRepository,
     val averageLine6 = {averageCalB(Utils4Controller.getCandles.map(_.close), 6)}
     //List - Listの計算
     val averageDiff: List[Double] = (0 until averageLine26.size).map(i => averageLine26(i) - averageLine6(i)).toList
-    val myAssets1 = List(1000000 ,100)
-    val firstAssets = myAssets1(0) + myAssets1(1) * candles(0).close
-    val myAssetsResults = myAssetsCal(averageDiff(0),averageDiff(1),candles(1).close)
-    Ok(views.html.virtualCurrency(myAssetsResults.toString))
+    val myAssetsResult = myAssetsCal(Utils4Controller.getCandles.map(_.close),
+      Utils4Controller.getCandles.map(_.time),averageDiff)
+    Ok(views.html.virtualCurrency(myAssetsResult.toString))
   }
 
 
@@ -91,8 +90,7 @@ class IdController @Inject()(repo: PersonRepository,
         }).toList
   }
   def averageCalB(values: List[Double], period: Int): List[Double] = averageCalA(values,period)
-
-  averageCalA(List.empty[Double], 26)
+  //averageCalA(List.empty[Double], 26)
   averageCalA(List.empty[Double], 6)
 
   // def myAssetsCal(xemClosePriceDateAvg: List[(Double,Long,Double)]):Double = {
@@ -112,7 +110,7 @@ class IdController @Inject()(repo: PersonRepository,
     var count = 0
     var buy: List[(Double,Long)] = List.empty[(Double,Long)]
     var sell: List[(Double,Long)] = List.empty[(Double,Long)]
-    for (i <- 0 until xemClosePrices.length){
+    for (i <- 0 until xemClosePrices.length - 1){
       if (averageDiff(i) < 0 && averageDiff(i+1) > 0 && myAsset0 != 0){
           myAsset1 = myAsset1 + ((myAsset0/xemClosePrices(i+1))*ratio)
         myAsset0 = 0
@@ -123,10 +121,11 @@ class IdController @Inject()(repo: PersonRepository,
         myAsset1 = 0
         count = count + 1
         sell = sell ++ List((xemClosePrices(i+1),xemClosePriceDates(i+1)))
-      }else ()
+      }else None
     }
-    val firstFund = myAsset0 + xemClosePrices.last * myAsset1
+    val EndFund = myAsset0 + xemClosePrices.last * myAsset1
     // 割合がほしいのでよしなに割り算して返す
+    println(EndFund)
   }
 
   def input = Action { implicit request =>
