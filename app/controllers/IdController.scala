@@ -12,6 +12,7 @@ import play.api.i18n._
 import play.api.libs.json.Json
 import play.api.mvc._
 
+import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
 class IdController @Inject()(repo: PersonRepository,
@@ -53,7 +54,7 @@ class IdController @Inject()(repo: PersonRepository,
     val averageLine26 = {averageCalA(Utils4Controller.getCandles.map(_.close), 26)}
     val averageLine6 = {averageCalB(Utils4Controller.getCandles.map(_.close), 6)}
     //List - Listの計算
-    val averageDiff = (0 until averageLine26.size).map(i => averageLine26(i) - averageLine6(i))
+    val averageDiff: List[Double] = (0 until averageLine26.size).map(i => averageLine26(i) - averageLine6(i)).toList
     val myAssets1 = List(1000000 ,100)
     val firstAssets = myAssets1(0) + myAssets1(1) * candles(0).close
     val myAssetsResults = myAssetsCal(averageDiff(0),averageDiff(1),candles(1).close)
@@ -89,36 +90,44 @@ class IdController @Inject()(repo: PersonRepository,
         else {values.slice(i - period, i).reduceLeft(_ + _) / period
         }).toList
   }
+  def averageCalB(values: List[Double], period: Int): List[Double] = averageCalA(values,period)
 
-  def averageCalB(values: List[Double], period: Int): List[Double] = {
-    (for (i <- 1 to values.length)
-      yield
-        if (i < period) 0.00
-        else {values.slice(i - period, i).reduceLeft(_ + _) / period
-        }).toList
-  }
+  averageCalA(List.empty[Double], 26)
+  averageCalA(List.empty[Double], 6)
 
-  def myAssetsCal(A1: Double, A2: Double ,A3: Double):Double = {
-    var myAssets2 = List(1000000 ,100)
+  // def myAssetsCal(xemClosePriceDateAvg: List[(Double,Long,Double)]):Double = {
+  def myAssetsCal(xemClosePrices: List[Double],xemClosePriceDates:List[Long],averageDiff :List[Double]):Double = {
+    // xemClosePrices,dates,averageDiffの先頭が多分古くあるべき
+    // averageDiffとclosePricesの長さがもし違うのであれば（実装社依存）下記の通りにzipするべき
+    // [1,2,3,4,5] [x,y,z] => [3,4,5] [x,y,z]
+    // my bad i+1は落ちる気がするIndexArrayOutBoundsOfExceptionで
+    require(xemClosePrices.length == xemClosePriceDates.length)
+    require(averageDiff.length <= xemClosePrices.length)
+    var myAsset0 = 1000000
+    var myAsset1:Double = 100
+    // 直近のxemの終値 -> 古い順でソートしたxemの終値の一番最初の値
+    // 日本円換算
+    val firstFund = myAsset0 + xemClosePrices.head * myAsset1
     val ratio = 0.99
-    var counts = 0
-    if(0 > A1 && A2 > 0 && myAssets2(0) != 0){
-      myAssets2(1) = myAssets2(1) + myAssets2(0)/A3 * ratio
-      //Buy
-      myAssets2(0) = 0
-      counts = counts + 1
-    }else(0 < A1 && 0 < A2 && myAssets2(1) != 0){
-      myAssets2(0) = myAssets2(0) + myAssets2(1) * A3
-      //Sell
-      myAssets2(1) = 0
-      counts = counts + 1
+    var count = 0
+    var buy: List[(Double,Long)] = List.empty[(Double,Long)]
+    var sell: List[(Double,Long)] = List.empty[(Double,Long)]
+    for (i <- 0 until xemClosePrices.length){
+      if (averageDiff(i) < 0 && averageDiff(i+1) > 0 && myAsset0 != 0){
+          myAsset1 = myAsset1 + ((myAsset0/xemClosePrices(i+1))*ratio)
+        myAsset0 = 0
+        count = count + 1
+        buy = buy ++ List((xemClosePrices(i+1),xemClosePriceDates(i+1)))
+      }else if (averageDiff(i) > 0 && averageDiff(i+1) < 0 && myAsset1 != 0) {
+        myAsset0 == myAsset0 + ((myAsset1*xemClosePrices(i+1)) * ratio)
+        myAsset1 = 0
+        count = count + 1
+        sell = sell ++ List((xemClosePrices(i+1),xemClosePriceDates(i+1)))
+      }else ()
     }
-
+    val firstFund = myAsset0 + xemClosePrices.last * myAsset1
+    // 割合がほしいのでよしなに割り算して返す
   }
-  /*def averageCal(A1: Double, A2: Double, A3: Double):Option[(Boolean, Double)] = {
-    if
-  }*/
-
 
   def input = Action { implicit request =>
     Ok(views.html.bodyIndex(bodyForm))
