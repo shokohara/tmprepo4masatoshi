@@ -126,6 +126,7 @@ class IdController @Inject()(repo: PersonRepository,
     }
     val endFund = myAsset0 + xemClosePrices.last * myAsset1
     // 割合がほしいのでよしなに割り算して返す
+    endFund
   }
 
   def input = Action { implicit request =>
