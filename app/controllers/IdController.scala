@@ -50,8 +50,13 @@ class IdController @Inject()(repo: PersonRepository,
 
   val virtualCurrency = Action {implicit request =>
     val candles: List[Zaif.B] = Utils4Controller.getCandles
-    val averageLineA = averageCal(candles(0).close,candles(0).time)
-    Ok(views.html.virtualCurrency(averageLineA))
+    val averageLine26 = {averageCalA(Utils4Controller.getCandles.map(_.close), 26)}
+    val averageLine6 = {averageCalB(Utils4Controller.getCandles.map(_.close), 6)}
+    //List - Listの計算
+    val averageDiff = (0 until averageLine26.size).map(i => averageLine26(i) - averageLine6(i))
+    val myAssets = List(1000000 ,100)
+    val firstAssets = myAssets(0) + myAssets(1) * candles(0).close
+    Ok(views.html.virtualCurrency(firstAssets.toString))
   }
 
 
@@ -76,7 +81,15 @@ class IdController @Inject()(repo: PersonRepository,
     }
   }
 
-  def averageCal(values: List[Double], period: Long): List[Double] = {
+  def averageCalA(values: List[Double], period: Int): List[Double] = {
+    (for (i <- 1 to values.length)
+      yield
+        if (i < period) 0.00
+        else {values.slice(i - period, i).reduceLeft(_ + _) / period
+        }).toList
+  }
+
+  def averageCalB(values: List[Double], period: Int): List[Double] = {
     (for (i <- 1 to values.length)
       yield
         if (i < period) 0.00
