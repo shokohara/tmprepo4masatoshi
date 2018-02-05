@@ -57,6 +57,7 @@ class IdController @Inject()(repo: PersonRepository,
     val averageDiff: List[Double] = (0 until averageLine26.size).map(i => averageLine26(i) - averageLine6(i)).toList
     val myAssetsResult = myAssetsCal(Utils4Controller.getCandles.map(_.close),
       Utils4Controller.getCandles.map(_.time),averageDiff)
+    println(myAssetsResult)
     Ok(views.html.virtualCurrency(myAssetsResult.toString))
   }
 
@@ -94,14 +95,14 @@ class IdController @Inject()(repo: PersonRepository,
   averageCalA(List.empty[Double], 6)
 
   // def myAssetsCal(xemClosePriceDateAvg: List[(Double,Long,Double)]):Double = {
-  def myAssetsCal(xemClosePrices: List[Double],xemClosePriceDates:List[Long],averageDiff :List[Double]):Double = {
+  def myAssetsCal(xemClosePrices: List[Double], xemClosePriceDates:List[Long], averageDiff :List[Double]):Double= {
     // xemClosePrices,dates,averageDiffの先頭が多分古くあるべき
     // averageDiffとclosePricesの長さがもし違うのであれば（実装社依存）下記の通りにzipするべき
     // [1,2,3,4,5] [x,y,z] => [3,4,5] [x,y,z]
     // my bad i+1は落ちる気がするIndexArrayOutBoundsOfExceptionで
     require(xemClosePrices.length == xemClosePriceDates.length)
     require(averageDiff.length <= xemClosePrices.length)
-    var myAsset0 = 1000000
+    var myAsset0:Double = 1000000
     var myAsset1:Double = 100
     // 直近のxemの終値 -> 古い順でソートしたxemの終値の一番最初の値
     // 日本円換算
@@ -111,21 +112,20 @@ class IdController @Inject()(repo: PersonRepository,
     var buy: List[(Double,Long)] = List.empty[(Double,Long)]
     var sell: List[(Double,Long)] = List.empty[(Double,Long)]
     for (i <- 0 until xemClosePrices.length - 1){
-      if (averageDiff(i) < 0 && averageDiff(i+1) > 0 && myAsset0 != 0){
-          myAsset1 = myAsset1 + ((myAsset0/xemClosePrices(i+1))*ratio)
+      if(averageDiff(i) < 0 && averageDiff(i+1) > 0 && myAsset0 != 0){
+        myAsset1 = myAsset1 + ((myAsset0/xemClosePrices(i+1))*ratio)
         myAsset0 = 0
         count = count + 1
-        buy = buy ++ List((xemClosePrices(i+1),xemClosePriceDates(i+1)))
+        buy = buy ++ List((xemClosePrices(i+1), xemClosePriceDates(i+1)))
       }else if (averageDiff(i) > 0 && averageDiff(i+1) < 0 && myAsset1 != 0) {
-        myAsset0 == myAsset0 + ((myAsset1*xemClosePrices(i+1)) * ratio)
+        myAsset0 = myAsset0 + ((myAsset1*xemClosePrices(i+1)) * ratio)
         myAsset1 = 0
         count = count + 1
-        sell = sell ++ List((xemClosePrices(i+1),xemClosePriceDates(i+1)))
+        sell = sell ++ List((xemClosePrices(i+1), xemClosePriceDates(i+1)))
       }else None
     }
-    val EndFund = myAsset0 + xemClosePrices.last * myAsset1
+    val endFund = myAsset0 + xemClosePrices.last * myAsset1
     // 割合がほしいのでよしなに割り算して返す
-    println(EndFund)
   }
 
   def input = Action { implicit request =>
