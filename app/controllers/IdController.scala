@@ -37,17 +37,16 @@ class IdController @Inject()(repo: PersonRepository,
     val calculateResults = for {i <- 0 until betterDeterMineResults.length} yield function(
       betterDeterMineResults(i)._1, betterDeterMineResults(i)._2)
     val temp = calculateResults.sum
-
     //varの場合
     //var temp:Double = 0
     //for (i <- (0 until calculateResults.length)) temp = calculateResults(i) + temp
-
     println(temp)
     Ok(views.html.dashboard(calculateResults.toString))
     //.mkString("", "\n", "")
     //Ok(views.html.dashboard(deterMineResults))
     //Ok(views.html.dashboard(candles.toString))
   }
+
 
   val virtualCurrency = Action {implicit request =>
     val candles: List[Zaif.B] = Utils4Controller.getCandles
@@ -57,13 +56,13 @@ class IdController @Inject()(repo: PersonRepository,
     val averageDiff: List[Double] = (0 until averageLine26.size).map(i => averageLine26(i) - averageLine6(i)).toList
     val myAssetsResult = myAssetsCal(Utils4Controller.getCandles.map(_.close),
       Utils4Controller.getCandles.map(_.time),averageDiff)
-    println(myAssetsResult)
+    //ここから最小二乗法
+    //26分足=y, 6分足=x
+    val deviation = {deviationCal(Utils4Controller.getCandles.map(_.close),averageLine26,26)}
+    //val dispersion = {dispersionCal(averageDiff,6)}
+    println(deviation)
     Ok(views.html.virtualCurrency(myAssetsResult.toString))
   }
-
-
-   //
-   //taple option,double option double
 
   // false = sell
   // true = buy
@@ -90,9 +89,10 @@ class IdController @Inject()(repo: PersonRepository,
         else {values.slice(i - period, i).reduceLeft(_ + _) / period
         }).toList
   }
-  def averageCalB(values: List[Double], period: Int): List[Double] = averageCalA(values,period)
-  //averageCalA(List.empty[Double], 26)
-  averageCalA(List.empty[Double], 6)
+
+  def averageCalB(values: List[Double], period: Int): List[Double] = averageCalA(values, period)
+    //averageCalA(List.empty[Double], 26)
+    averageCalA(List.empty[Double], 6)
 
   // def myAssetsCal(xemClosePriceDateAvg: List[(Double,Long,Double)]):Double = {
   def myAssetsCal(xemClosePrices: List[Double], xemClosePriceDates:List[Long], averageDiff :List[Double]):Double= {
@@ -128,6 +128,22 @@ class IdController @Inject()(repo: PersonRepository,
     // 割合がほしいのでよしなに割り算して返す
     endFund
   }
+
+  def deviationCal(xemClosePrices: List[Double], xemAverageLine26: List[Double], period: Int): List[Double] = {
+    //require(xemClosePrices(0 to 5) == xemAverageLine26.length)
+    (for (i <- 1 to xemClosePrices.length-1)
+      yield
+        if (i < period) 0.00
+        else {xemClosePrices.slice(i - period, i).reduceLeft(_ + _) - xemAverageLine26(i)
+        }).toList
+  }
+  /*def dispersionCal(deviation: List[Double], Period: Int):List[Double] = {
+    (for (i <- 0 until deviation.length - 6)
+    yield
+      if()
+      )
+  }*/
+
 
   def input = Action { implicit request =>
     Ok(views.html.bodyIndex(bodyForm))
