@@ -58,9 +58,12 @@ class IdController @Inject()(repo: PersonRepository,
       Utils4Controller.getCandles.map(_.time),averageDiff)
     //ここから最小二乗法
     //26分足=y, 6分足=x
-    val deviation = {deviationCal(Utils4Controller.getCandles.map(_.close),averageLine26,26)}
-    //val dispersion = {dispersionCal(averageDiff,6)}
-    println(deviation)
+    val deviation26 = {deviationCal(Utils4Controller.getCandles.map(_.close),averageLine26)}
+    val deviation6 = {deviationCal2(Utils4Controller.getCandles.map(_.close),averageLine6)}
+    //分散のため二乗
+    val deviationSquaring =(0 until averageLine26.size).map(i=> deviation26(i) * deviation26(i)).toList
+    val dispersion = {despersionCal(deviationSquaring, 26)}
+    println(dispersion)
     Ok(views.html.virtualCurrency(myAssetsResult.toString))
   }
 
@@ -129,20 +132,32 @@ class IdController @Inject()(repo: PersonRepository,
     endFund
   }
 
-  def deviationCal(xemClosePrices: List[Double], xemAverageLine26: List[Double], period: Int): List[Double] = {
+  def deviationCal(xemClosePrices: List[Double], xemAverageLine26: List[Double]): List[Double] = {
     //require(xemClosePrices(0 to 5) == xemAverageLine26.length)
-    (for (i <- 1 to xemClosePrices.length-1)
+    xemClosePrices.zipAll(xemAverageLine26, 0.0, 0.0)
+      .map { case (a, b) => if (a == 0.0 || b == 0.0) None else Some((a, b)) }
+      //map{case}はList内の計算
+      .map(_.map { case (a, b) => a - b })
+      .map(_.getOrElse(0.0))
+  }
+
+  def deviationCal2(xemClosePrices: List[Double], xemAverageLine6: List[Double]): List[Double] = {
+    //require(xemClosePrices(0 to 5) == xemAverageLine26.length)
+    xemClosePrices.zipAll(xemAverageLine6, 0.0, 0.0)
+      .map { case (a, b) => if (a == 0.0 || b == 0.0) None else Some((a, b)) }
+      //map{case}はList内の計算
+      .map(_.map { case (a, b) => a - b })
+      .map(_.getOrElse(0.0))
+  }
+
+  def despersionCal(xemDeviationSquaring: List[Double],period: Int):List[Double] = {
+    (for (i <- 1 to xemDeviationSquaring.length)
       yield
         if (i < period) 0.00
-        else {xemClosePrices.slice(i - period, i).reduceLeft(_ + _) - xemAverageLine26(i)
+        else {xemDeviationSquaring.slice(i - period, i).reduceLeft(_+_) / period
         }).toList
   }
-  /*def dispersionCal(deviation: List[Double], Period: Int):List[Double] = {
-    (for (i <- 0 until deviation.length - 6)
-    yield
-      if()
-      )
-  }*/
+
 
 
   def input = Action { implicit request =>
