@@ -60,10 +60,13 @@ class IdController @Inject()(repo: PersonRepository,
     //26分足=y, 6分足=x
     val deviation26 = {deviationCal(Utils4Controller.getCandles.map(_.close),averageLine26)}
     val deviation6 = {deviationCal2(Utils4Controller.getCandles.map(_.close),averageLine6)}
-    //分散のため二乗
+    //分散のため、二乗後に平均化
     val deviationSquaring =(0 until averageLine26.size).map(i=> deviation26(i) * deviation26(i)).toList
     val dispersion = {despersionCal(deviationSquaring, 26)}
-    println(dispersion)
+    //共分散のため、二乗後に平均化
+    val covarianceSquaring = (0 until averageLine26.size).map(i=> deviation26(i) * deviation6(i)).toList
+    val covariance: List[Double] = {covarianceCal(covarianceSquaring, 26)}
+    println(covariance)
     Ok(views.html.virtualCurrency(myAssetsResult.toString))
   }
 
@@ -156,6 +159,15 @@ class IdController @Inject()(repo: PersonRepository,
         if (i < period) 0.00
         else {xemDeviationSquaring.slice(i - period, i).reduceLeft(_+_) / period
         }).toList
+  }
+
+  def covarianceCal(xemCovarianceSquaring: List[Double],period: Int):List[Double] = {
+    (for (i <- 1 to xemCovarianceSquaring.length)
+      yield
+        if (i < period) 0.00
+        else {
+          xemCovarianceSquaring.slice(i - period, i).reduceLeft(_ + _) / period
+        }).map { case (a) => if (a < 0.0) None else Some((a * -1.0)) }.toList
   }
 
 
