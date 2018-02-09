@@ -53,19 +53,20 @@ class IdController @Inject()(repo: PersonRepository,
     val averageLine26 = {averageCalA(Utils4Controller.getCandles.map(_.close), 26)}
     val averageLine6 = {averageCalB(Utils4Controller.getCandles.map(_.close), 6)}
     //List - Listの計算
-    val averageDiff: List[Double] = (0 until averageLine26.size).map(i => averageLine26(i) - averageLine6(i)).toList
+    val averageDiff: List[Double] = (0 until averageLine26.length).map(i => averageLine26(i) - averageLine6(i)).toList
     val myAssetsResult = myAssetsCal(Utils4Controller.getCandles.map(_.close),
       Utils4Controller.getCandles.map(_.time),averageDiff)
     //ここから最小二乗法
     //26分足=y, 6分足=x
     val deviation26 = {deviationCal(Utils4Controller.getCandles.map(_.close),averageLine26)}
     val deviation6 = {deviationCal2(Utils4Controller.getCandles.map(_.close),averageLine6)}
-    //分散のため、二乗後に平均化
-    val deviationSquaring =(0 until averageLine26.size).map(i=> deviation26(i) * deviation26(i)).toList
-    val dispersion = {despersionCal(deviationSquaring, 26)}
-    //共分散のため、二乗後に平均化
-    val covarianceSquaring = (0 until averageLine26.size).map(i=> deviation26(i) * deviation6(i)).toList
+    //分散のため、6分足(x)二乗後に平均化
+    val deviationSquaring =(0 until averageLine6.length).map(i=> deviation6(i) * deviation6(i)).toList
+    val dispersion = {despersionCal(deviationSquaring, 6)}
+    //共分散のため、26分足と6分足を乗算後、平均化
+    val covarianceSquaring = (0 until averageLine26.length).map(i=> deviation26(i) * deviation6(i)).toList
     val covariance: List[Double] = {covarianceCal(covarianceSquaring, 26)}
+    val Slope = (0 until covariance.length).map(i => covariance(i) / dispersion(i)).toList
     println(covariance)
     Ok(views.html.virtualCurrency(myAssetsResult.toString))
   }
@@ -98,7 +99,7 @@ class IdController @Inject()(repo: PersonRepository,
 
   def averageCalB(values: List[Double], period: Int): List[Double] = averageCalA(values, period)
     //averageCalA(List.empty[Double], 26)
-    averageCalA(List.empty[Double], 6)
+    //averageCalA(List.empty[Double], 6)
 
   // def myAssetsCal(xemClosePriceDateAvg: List[(Double,Long,Double)]):Double = {
   def myAssetsCal(xemClosePrices: List[Double], xemClosePriceDates:List[Long], averageDiff :List[Double]):Double= {
@@ -144,14 +145,9 @@ class IdController @Inject()(repo: PersonRepository,
       .map(_.getOrElse(0.0))
   }
 
-  def deviationCal2(xemClosePrices: List[Double], xemAverageLine6: List[Double]): List[Double] = {
-    //require(xemClosePrices(0 to 5) == xemAverageLine26.length)
-    xemClosePrices.zipAll(xemAverageLine6, 0.0, 0.0)
-      .map { case (a, b) => if (a == 0.0 || b == 0.0) None else Some((a, b)) }
-      //map{case}はList内の計算
-      .map(_.map { case (a, b) => a - b })
-      .map(_.getOrElse(0.0))
-  }
+  def deviationCal2(xemClosePrices: List[Double], xemAverageLine6: List[Double]): List[Double] =
+    deviationCal(xemClosePrices,xemAverageLine6)
+
 
   def despersionCal(xemDeviationSquaring: List[Double],period: Int):List[Double] = {
     (for (i <- 1 to xemDeviationSquaring.length)
@@ -167,7 +163,7 @@ class IdController @Inject()(repo: PersonRepository,
         if (i < period) 0.00
         else {
           xemCovarianceSquaring.slice(i - period, i).reduceLeft(_ + _) / period
-        }).map { case (a) => if (a < 0.0) None else Some((a * -1.0)) }.toList
+        }).toList
   }
 
 
